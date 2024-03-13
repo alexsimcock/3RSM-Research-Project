@@ -1,0 +1,45 @@
+\documentclass[../../main.tex]{subfiles}
+
+\begin{document}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture} [-> , >= stealth, shorten >= 2 pt, line width = 0.5pt, node distance = 1.75cm]
+
+\node (start) [draw, circle, fill=gray!30!white] {$Y_0$};
+\node [draw, circle] (y1) [right of = start] {$Y_1$};
+\node [draw, circle] (y2) [right of = y1] {$Y_2$};
+\node [draw, circle] (ydot) [right of = y2] {$\cdots$};
+\node [draw, circle] (yn) [right of = ydot] {$Y_n$};
+
+\path (start) edge (y1);
+\path (y1) edge (y2);
+\path (y2) edge (ydot);
+\path (ydot) edge (yn);
+
+\node [draw, circle] (x1) [below of = y1] {$X_1$};
+\node [draw, circle] (x2) [below of = y2] {$X_2$};
+\node [draw, circle] (xdot) [below of = ydot] {$\cdots$};
+\node [draw, circle] (xn) [below of = yn] {$X_n$};
+
+\path (y1) edge (x1);
+\path (y2) edge (x2);
+\path (ydot) edge (xdot);
+\path (yn) edge (xn);
+
+
+\node (c1w1) at ($(y1)!0.45!(x1)$) {};
+\node (c3w3) at ($(yn)!0.45!(xn)$) {};
+\draw [-, dashed, line width =0.75 pt, shorten >=-1.75cm, shorten <=-1.75cm] (c1w1) -- (c3w3);
+
+\node (y2.5) at ($(y2)!0.5!(ydot)$) {};
+\node (x2.5) at ($(x2)!0.5!(xdot)$) {};
+\node [above of = y2.5, node distance= 1cm] {\large Hidden Tag-Sequence};
+\node [below of = x2.5, node distance= 1cm] {\large Observed Word-Sequence};
+
+\end{tikzpicture}
+\caption{A hidden Markov model applied to the part-of-speech tagging problem.}
+\label{fig:crf-diag}
+\end{figure}
+
+\end{document}

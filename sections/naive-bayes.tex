@@ -1,0 +1,64 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+The simplest approach to the problem is to assume a \textbf{generative} model, making strict assumptions of the method by which the variables $X$ and $Y$ are generated in order to simplify probability calculations.
+By imposing two such assumptions we are able to quickly devise a rudimentary approach.
+
+\begin{assumption}[Independence of Observations]
+The probability of each word $X_i$ depends exclusively on the corresponding tag $Y_i$ and is independent of all other elements in either sequence: $p (X \mid Y) = \prod_{i=1}^n p (X_i \mid Y_i)$.
+\end{assumption}
+
+\begin{assumption}[Independence of Tags]
+The probability of each tag $Y_i$ is independent of all other tags in $Y$: $p (Y) = \prod_{i=1}^n p (Y_i)$.
+\end{assumption}
+
+In combination, these two assumptions specify almost complete independence and allow for $\hat{Y}$ to be constructed using a na{\"i}ve Bayes classifier (known as na{\"i}ve due to the overly-ambitious assumption of tag-independence).
+
+The Na{\"i}ve Bayes classifier models the distribution $p(X,Y) = \prod_{i=1}^n p(X_i \mid Y_i)p(Y_i)$. Which by the identity of the conditional probability is simplifiable to $\prod_{i=1}^n p(X_i, Y_i)$. Hence,
+%PICK ONE OF THESE TWO...
+\begin{equation*}
+    Y^* = \argmax_Y \frac{p(Y,X)}{p(X)} = \argmax_Y \frac{1}{p(X)}\prod_{i=1}^n p(X_i, Y_i) = \argmax_Y \prod_{i=1}^n p(X_i, Y_i)
+\end{equation*}
+%We can apply the Na{\"i}ve Bayes model to derive $Y^*$,
+%\begin{gather*}
+%    p(Y \mid X) = \frac{p(Y,X)}{p(X)} = \frac{1}{p(X)}\prod_{i=1}^n p(X_i \mid Y_i)p(Y_i) = \frac{1}{p(X)}\prod_{i=1}^n p(X_i, Y_i) \\
+%    \therefore Y^* = \argmax_Y p(Y \mid X) = \argmax_Y \prod_{i=1}^n p(X_i, Y_i)
+%\end{gather*}
+Note that $1/p(X)$ can be disregarded as it remains constant across all $Y$ values.
+%Not necessarily better than simply assigning the most common tag...
+%Much more context we could look to leverage, particuarly the sequential nature...
+
+The probabilities required for the final calculation of $\hat{Y}$ are easily formed by relative frequency counts using a tagged reference corpus (the Penn Treebank is an industry standard example for such a task).
+However, the na{\"i}ve bayes is likely to perform poorly here since we are labelling individual elements rather than labelling an entire sequence of elements, a generally unintended application of this classifier.
+
+A similar but more sensible approach can be deducted even more simply, by maximising $\prod_{i=1}^n p(Y_i \mid X_i)$.
+On inspection, this will assign the tag to each word which is most frequently associated with the given word.
+Despite the simplicity of this approach the accuracy rate is likely to be high: consider that many words in the English language have only one appropriate syntactic category.
+As such, it forms the most appropriate baseline for improvement in further models.
+
+\subsection{N-gram Models}
+
+We may (correctly) imagine that considerable improvements in accuracy could be made by relaxing the driving assumption that each word is generated independent of its local context.
+For example, in the sequence \textit{`the man'} the determiner \textit{`the'} alludes to a higher likelihood that the successive word \textit{`man'} should be tagged \noun\ (as opposed to \verbsym).
+
+%We may take this as a contradiction of assumption \ref{ass:transition} and choose to exchange our assumption for one that states that $Y_i$ is dependent on one or more of its neighbouring elements.
+This motivates the concept of `$n$-grams' which are sub-sequences of $n$ consecutive words grouped together.
+This concept is used frequently in the natural language processing field as it provides a better view of semantics by including local context.
+At this point, it also serves us well to introduce the idea of a \textit{start} tag. Namely, $Y_0 = \textit{start}$, this is non-trivial once we begin to consider neighbouring tags as it provides valuable information on $Y_1$.
+
+In this model, we can now alter our estimate to include the neighbouring words as features.
+Once again calculating the probability by relative frequency, then using an adapted formula $\hat{Y} = \argmax_{Y} \prod_{i=1}^n  p(Y_i \mid X_{i-1}, X_i, X_{i+1})$ we are able to find the label sequence $\hat{Y}$. 
+
+However we run into potential issues of overfitting and zero-counts, where certain combinations of words may have so few occurrences in the corpus that they have very high variance (dramatically high/low probability), or have never occurred and thus will have zero probability for all potential tags.
+This can be easily counteracted by additive smoothing, a technique which will be used once again with later models.
+Additive smoothing adds a constant term to the numerator which is normalised over all potential tags on the denominator.
+\begin{equation*} \label{eq:bayes-smoothing}
+\widehat{p(Y_i \mid X_{i-1}, X_{i})} = \frac{\countfunc (Y_i, X_{i-1}, X_i)}{\countfunc (X_{i-1}, X_i)}
+\rightarrow
+\frac{\theta + \countfunc (Y_i, X_{i-1}, X_i)}{\theta |\mathcal{Y}| + \countfunc (X_{i-1}, X_i)}
+\end{equation*}
+It is worth noting that smoothing introduces bias into the model and so the choice of the value of hyper-parameter $\theta$ should be made carefully, ideally with a technique such as cross-validation. 
+
+
+\end{document}

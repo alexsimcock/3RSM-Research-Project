@@ -1,0 +1,39 @@
+\documentclass[../../main.tex]{subfiles}
+
+\begin{document}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture} [line width = 0.5pt, node distance = 1.75cm]
+
+\node (start) [draw, circle, fill=gray!30!white] {$Y_0$};
+\node [draw, circle] (y1) [right of = start] {$Y_1$};
+\node [draw, circle] (y2) [right of = y1] {$Y_2$};
+\node [draw, circle] (ydot) [right of = y2] {$\cdots$};
+\node [draw, circle] (yn) [right of = ydot] {$Y_n$};
+
+\path (start) edge (y1);
+\path (y1) edge (y2);
+\path (y2) edge (ydot);
+\path (ydot) edge (yn);
+
+\node [draw, circle] (x1) [below of = y1] {$X_1$};
+\node [draw, circle] (x2) [below of = y2] {$X_2$};
+\node [draw, circle] (xdot) [below of = ydot] {$\cdots$};
+\node [draw, circle] (xn) [below of = yn] {$X_n$};
+
+\draw [thick, dashed, rounded corners] ($(x1.north west)+(-0.3,0.3)$) rectangle ($(xn.south east)+(0.3,-0.3)$) node[fitting node] (X) {};
+
+\node [right of = xn, node distance=1.5cm] {$X_{1:n}$};
+
+\path (X) edge (y1);
+\path (X) edge (y2);
+\path (X) edge (ydot);
+\path (X) edge (yn);
+
+\end{tikzpicture}
+\caption{A linear-chain conditional random field applied to the part-of-speech tagging problem.}
+\label{fig:lc-crf-diag}
+\end{figure}
+
+\end{document}

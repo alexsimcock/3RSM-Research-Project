@@ -1,0 +1,87 @@
+% Document geometry and pre-requisites
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=2cm]{geometry}
+% Bibliography / referencing
+\usepackage[style = authoryear]{biblatex}
+\addbibresource{bibliography.bib}
+% Mathematical symbols
+\usepackage{amsmath, amssymb, mathtools, mathrsfs}
+% Algorithms
+\usepackage{algorithm,algpseudocode}
+% Tikz graphics
+\usepackage{graphicx, tikz}
+\usetikzlibrary{shapes, arrows, positioning, calc}
+% Tikz rectangle node (https://tex.stackexchange.com/questions/47704/how-to-establish-node-anchor-like-points-on-a-tikz-rectangle-path-is-there-a)
+\usetikzlibrary{fit}
+\makeatletter
+\tikzset{
+  fitting node/.style={
+    inner sep=0pt,
+    fill=none,
+    draw=none,
+    reset transform,
+    fit={(\pgf@pathminx,\pgf@pathminy) (\pgf@pathmaxx,\pgf@pathmaxy)}
+  },
+  reset transform/.code={\pgftransformreset}
+}
+\makeatother
+% Nesting figures (currently unused)
+\usepackage{caption}
+\usepackage{subcaption}
+% Separating file into neater sections
+\usepackage{subfiles}
+
+\newtheorem{definition}{Definition}[section]\newtheorem{assumption}{Assumption}
+
+\DeclareMathOperator{\prob}{P}
+\newcommand{\noun}{\textbf{N}}
+\newcommand{\verbsym}{\textbf{V}}
+\newcommand{\adj}{\textbf{J}}
+\renewcommand{\det}{\textbf{D}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\countfunc}{count}
+
+%\title{Sequential Labelling Techniques for Natural Language}
+%\title{Sequence Labelling with Graphical Models with an Application in Natural Language Processing}
+\title{Graphical Sequence Labelling for Natural Language}
+\author{Alexander Simcock (2146154)}
+\date{}
+
+\begin{document}
+
+%TODO: settle on definitive notation
+% Key:
+% Tag Sequence Y, element within Y_i
+% Tag alphabet \mathcal{Y}, single tag k, tag sequence K
+% Word Sequence X, element within X_i
+% single word w, word sequence W
+% all words \mathcal{W}
+% Parameters \theta
+
+\maketitle
+
+\section{Introduction}
+\subfile{sections/introduction}
+
+\section{The Na{\"i}ve Bayes Classifier}
+\subfile{sections/naive-bayes}
+
+\section{Hidden Markov Models (HMMs)}
+\subfile{sections/hidden-markov-models}
+
+\section{Additional Formalisms for HMMs}
+\subfile{sections/factor-graphs}
+
+%\section{Maximum Entropy Markov Models (MEMMs)}
+%\subfile{sections/maximum-entropy-markov-models}
+
+\section{Conditional Random Fields (CRFs)}
+\subfile{sections/conditional-random-fields}
+
+\section{Additional Applications}
+RNA sequencing etc.
+
+\printbibliography
+
+\end{document}

@@ -1,0 +1,57 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+Having fully defined the HMM and its algorithms it is now beneficial to establish a wider formalism of the class of model it belongs to.
+Doing so will allow for more clear parallels to be made between the next modelling approaches, and more widely provides notational language for any number of models to be expressed succinctly.
+
+\subsection{Factor Graphs and Random Fields}
+
+The methods discussed in this paper are known as `graphical methods', for their compact representation using graphs.
+However, understanding them only as graphs fails to make the similarities particularly apparent, especially as more and more complex approaches are introduced.
+%Indeed most neural networks too can be described in this way
+A \textit{factor graph} is a particularly natural formalism for this task, providing neat representations both graphically and more...
+
+Factor graphs are bipartite graphs that provide compact representations of the factorisation of a function (often a probability distribution, as is the case in this project).
+In doing so, they enable efficient computing of certain function characteristics of interest, such as marginal distributions.
+Formally, the bipartite graph $G = (V,F,E)$ is a factor graph when the set of nodes $V$ indexes the modelled random variables (here $X$ and $Y$) and the set of nodes $F$ indexes the factors (a set of local functions denoted $( \Psi_a )_{a=1}^A$).
+Any given edge of $G$ between variable node $Y_i \in V$ and factor node $\Psi_a \in F$ indicates that $Y_i$ is an argument of $\Psi_a$ in the factorisation of the distribution function.
+
+\begin{definition}
+    Distribution $p(Y)$ factorises according to factor graph $G$ if there exists $\Psi_a$ such that $p(Y)$ can be expressed as
+    \begin{equation*}
+        p(Y) = Z^{-1} \prod_{a \in F} \Psi_a (Y_{N(a)})
+    \end{equation*}
+    Where $N(a)$ is the neighbourhood of node $a$ and $Z$ is a normalising constant, defined below
+    \begin{equation*}
+        Z = \sum_Y \prod_{a \in F} \Psi_a (Y_{N(a)})
+    \end{equation*}
+\end{definition}
+The random field is a subclass of such factor graphs.
+Graphical methods for probability distributions are generally factorisable into factor graphs.
+
+Essential to the representation of the discussed models as factor graphs is the concept of a weight.
+Weights are a direct translation of the earlier stored parameters.
+Allowing certain outcomes to be in one way or another selected for by biasing the model in intentional ways.
+
+\subsubsection{Feature Functions}
+
+We introduce a class of boolean indicators, known as `feature functions' which enable us to use one set of weights across all classes.
+\begin{gather*}
+    f_{i,j}(y, y', x) = %(y, y', x) =
+        \begin{cases}
+            1 & \text{if } y = i \text{ and } y' = j\\
+            0 & \text{otherwise}
+        \end{cases} \\
+    f_{i,o}(y, y', x) =
+        \begin{cases}
+            1 & \text{if } y = i \text{ and } x = o\\
+            0 & \text{otherwise}
+        \end{cases}
+\end{gather*}
+We will use notation $f_k$ to represent a generic feature function, ranging over all $f_{i,j}$ and $f_{i,o}$.
+$\theta_k$ will represent the weight matching $f_k$ whether that be $\theta_{i,j}$ or $\theta_{i,o}$.
+The feature functions are non-zero for only single classes and hence we can train weights by simply considering $f_k \theta_k$.
+
+
+\end{document}
