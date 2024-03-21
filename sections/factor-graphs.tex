@@ -2,56 +2,52 @@
 
 \begin{document}
 
-Having fully defined the HMM and its algorithms it is now beneficial to establish a wider formalism of the class of model it belongs to.
-Doing so will allow for more clear parallels to be made between the next modelling approaches, and more widely provides notational language for any number of models to be expressed succinctly.
+Having defined the HMM and its algorithms it is beneficial to formalise the class of models which it and the na{\"i}ve Bayes belong to.
+Doing so will allow for parallels to be made between the na{\"i}ve Bayes, HMM and the succeeding approach, in particular, making the transferability of certain algorithms apparent and succinct.
+The methods we have discussed are both amenable to graphical representations, however it is their approach to modelling, specifically factorising, the joint probability $p(Y,X) = p(Y)p(X \mid Y)$ that has mathematically defined their structure and usage.
+As a result, the \textbf{factor graph} is an ideal formalism for these approaches.
 
-\subsection{Factor Graphs and Random Fields}
-
-The methods discussed in this paper are known as `graphical methods', for their compact representation using graphs.
-However, understanding them only as graphs fails to make the similarities particularly apparent, especially as more and more complex approaches are introduced.
-%Indeed most neural networks too can be described in this way
-A \textit{factor graph} is a particularly natural formalism for this task, providing neat representations both graphically and more...
-
-Factor graphs are bipartite graphs that provide compact representations of the factorisation of a function (often a probability distribution, as is the case in this project).
-In doing so, they enable efficient computing of certain function characteristics of interest, such as marginal distributions.
-Formally, the bipartite graph $G = (V,F,E)$ is a factor graph when the set of nodes $V$ indexes the modelled random variables (here $X$ and $Y$) and the set of nodes $F$ indexes the factors (a set of local functions denoted $( \Psi_a )_{a=1}^A$).
-Any given edge of $G$ between variable node $Y_i \in V$ and factor node $\Psi_a \in F$ indicates that $Y_i$ is an argument of $\Psi_a$ in the factorisation of the distribution function.
-
-\begin{definition}
-    Distribution $p(Y)$ factorises according to factor graph $G$ if there exists $\Psi_a$ such that $p(Y)$ can be expressed as
+%more precise than a graph as dependencies arise
+Factor graphs are bipartite graphs that provide compact representations of the factorisation of a function and are typically applied to probability distributions.
+By doing so, they enable efficient computing of certain characteristics of interest, such as marginal distributions.
+Formally, the bipartite graph $G = (V,F,E)$ is a factor graph when the sets of nodes $V$ and $F$ index random variables (here $X$ and $Y$) and factors (a set of local functions denoted $\{\Psi_a \}_{a=1}^A$) respectively.
+Semantically, any edge in $E$ between a variable node $X_t \text{ or } Y_t \in V$ and factor node $\Psi_a \in F$ indicates that that variable is an argument of $\Psi_a$ in the factorisation of the distribution function.
+\begin{definition}%[Factorisation by Factor Graphs]
+    Distribution $p(Y)$ factorises according to factor graph $G$ if there exist a set of local functions $\{ \Psi_a \}_{a=1}^A$ such that $p(Y)$ can be expressed
     \begin{equation*}
-        p(Y) = Z^{-1} \prod_{a \in F} \Psi_a (Y_{N(a)})
+        p(Y) = \frac{1}{Z} \prod_{a \in F} \Psi_a (Y_{N(a)}), \quad Z = \sum_Y \prod_{a \in F} \Psi_a (Y_{N(a)})
     \end{equation*}
-    Where $N(a)$ is the neighbourhood of node $a$ and $Z$ is a normalising constant, defined below
-    \begin{equation*}
-        Z = \sum_Y \prod_{a \in F} \Psi_a (Y_{N(a)})
-    \end{equation*}
+    where $N(a)$ is the neighbourhood of node $a$ and $Z$ is a normalising constant as defined.
 \end{definition}
-The random field is a subclass of such factor graphs.
-Graphical methods for probability distributions are generally factorisable into factor graphs.
 
-Essential to the representation of the discussed models as factor graphs is the concept of a weight.
-Weights are a direct translation of the earlier stored parameters.
-Allowing certain outcomes to be in one way or another selected for by biasing the model in intentional ways.
-
-\subsubsection{Feature Functions}
-
-We introduce a class of boolean indicators, known as `feature functions' which enable us to use one set of weights across all classes.
-\begin{gather*}
-    f_{i,j}(y, y', x) = %(y, y', x) =
-        \begin{cases}
-            1 & \text{if } y = i \text{ and } y' = j\\
-            0 & \text{otherwise}
-        \end{cases} \\
-    f_{i,o}(y, y', x) =
-        \begin{cases}
-            1 & \text{if } y = i \text{ and } x = o\\
-            0 & \text{otherwise}
-        \end{cases}
-\end{gather*}
-We will use notation $f_k$ to represent a generic feature function, ranging over all $f_{i,j}$ and $f_{i,o}$.
-$\theta_k$ will represent the weight matching $f_k$ whether that be $\theta_{i,j}$ or $\theta_{i,o}$.
+For example, consider the na{\"i}ve Bayes model of the joint probability \cref{eqn:nb-model}, which can be written as a factor graph by defining factors $\Psi(Y) = p(Y)$ and $\Psi_t(Y,X_t) = p(X_t \mid Y)$.
+Naturally, we next look to re-write the HMM's model of the joint probability \cref{eq:hmm-model} so that it is amenable to being written as a factor graph, in order to do so we are required to introduce new notation that will allow $\Psi_a$ to be clearly expressed by bringing emission and transition parameters under the same umbrella. %TODO
+We first define the indicator `feature' functions $f_{i,j}$ and $f_{i,k}$:
+\begin{equation*}
+    f_{i,j}(Y_t, Y_{t'}, X_t) \coloneqq \ind{Y_t=i,Y_s=j}, \qquad f_{i,k}(Y_t, Y_s, X_t) \coloneqq \ind{Y_t=i,X_t=k}
+\end{equation*}
+By defining both functions to take the same inputs we are able to refer to a generic feature function $f_k$ which ranges over both the transition ($f_{i,j}$) and emission ($f_{i,k}$) indicators, such that $\{ f_k \}_{k=1}^K$ contains functions for all features.
+In the same manner, $\theta_k$ will denote a generic model parameter that matches the indicator $f_k$. Generally, $\theta_{i,j}$ corresponds to $a_{i,j}$ and $\theta_{i,k}$ to $b_i(k)$ in the HMM framework.\footnote{Within the factor graph framework separating $\pi$ and $A$ is no longer clarifying, subsequent references to transition parameters will consider $\pi$ and $A$ as one, by defining $a_{Y_0,i} = \pi_i$}
 The feature functions are non-zero for only single classes and hence we can train weights by simply considering $f_k \theta_k$.
-
+The HMM factorises the joint probability
+\begin{equation} \label{eq:hmm-model} 
+    p(Y,X) = \prod_{t=1}^T p(Y_t \mid Y_{t-1})p(X_t \mid Y_t)
+\end{equation}
+Which we are able to expand to an equivalent form
+\begin{gather*}
+    p(Y,X) = \frac{1}{Z} \prod_{t=1}^T \exp \left\{ \sum_{i,j \in \mathcal{Y}} \theta_{i,j} f_{i,j}(Y_t, Y_{t-1}, X_t) + \sum_{i \in \mathcal{Y}} \sum_{k \in \mathcal{W}} \theta_{k,i} f_{i,k}(Y_t, Y_{t-1}, X_t) \right\}, \\
+    \text{Where} \qquad \begin{array}{lr}
+    Z=1, \\ \theta_{ij} = \log{p(Y_{t-1}=i \mid Y_t=j)} = \log{a_{i,j}}, \\ \theta_{i,k} = \log{p(X_t=k \mid Y_t=i)} = \log{b_i(k)}
+    \end{array}
+\end{gather*}
+Which simplifies to
+\begin{equation*}
+    p(Y,X) = \frac{1}{Z} \prod_{t=1}^T \exp \left\{ \sum_{k=1}^K \theta_k f_k(Y_t, Y_{t-1}, X_t) \right\} = \frac{1}{Z} \prod_{t=1}^T \Psi_t(Yt,Y_{t-1},X_t)
+\end{equation*}
+where each local function $\Psi_t$ has the form:
+\begin{equation*}
+    \Psi_t(Yt,Y_{t-1},X_t) = \exp \left\{ \sum_{k=1}^K \theta_k f_k(Y_t, Y_{t-1}, X_t) \right\}.
+\end{equation*}
+Hence, the HMM also factorises according to a factor graph.
 
 \end{document}

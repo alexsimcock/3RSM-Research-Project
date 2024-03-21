@@ -6,6 +6,8 @@
 \addbibresource{bibliography.bib}
 % Mathematical symbols
 \usepackage{amsmath, amssymb, mathtools, mathrsfs}
+% Notationally neat derivatives
+\usepackage[thinc]{esdiff}
 % Algorithms
 \usepackage{algorithm,algpseudocode}
 % Tikz graphics
@@ -25,15 +27,21 @@
   reset transform/.code={\pgftransformreset}
 }
 \makeatother
-% Nesting figures (currently unused)
-\usepackage{caption}
+% Nesting figures
 \usepackage{subcaption}
 % Separating file into neater sections
 \usepackage{subfiles}
+% Smarter label referencing
+\usepackage{hyperref}
+\usepackage{cleveref}
 
+% Custom operators:
 \newtheorem{definition}{Definition}[section]\newtheorem{assumption}{Assumption}
 
-\DeclareMathOperator{\prob}{P}
+\newcommand{\ind}[1]{\mathbf{1}_{\{#1\}}}
+\newcommand{\yhat}{\hat{Y}}
+\newcommand{\ptheta}{p_\theta}
+
 \newcommand{\noun}{\textbf{N}}
 \newcommand{\verbsym}{\textbf{V}}
 \newcommand{\adj}{\textbf{J}}
@@ -53,11 +61,24 @@
 %TODO: settle on definitive notation
 % Key:
 % Tag Sequence Y, element within Y_i
-% Tag alphabet \mathcal{Y}, single tag k, tag sequence K
+% Tag alphabet \mathcal{Y}
 % Word Sequence X, element within X_i
-% single word w, word sequence W
-% all words \mathcal{W}
+
+% Tag states are i or j
+% Word emissions are k
+
+% Transition matrix A, a_{ij}
+% Emission matrix B, b_j(t)
+% Start transition \pi, \pi_i
 % Parameters \theta
+
+% Training data X^{(n)} n = 1 to N
+% Features k=1 to K
+% Sequence length t=1 to T
+
+% Notation worth adjusting:
+% p(X \mid \theta) -> p_\theta(X)
+% sequence length n -> T
 
 \maketitle
 
@@ -70,17 +91,18 @@
 \section{Hidden Markov Models (HMMs)}
 \subfile{sections/hidden-markov-models}
 
-\section{Additional Formalisms for HMMs}
+\section{Factor Graphs}
 \subfile{sections/factor-graphs}
 
-%\section{Maximum Entropy Markov Models (MEMMs)}
-%\subfile{sections/maximum-entropy-markov-models}
+\section{Generative and Discriminative Models}
+\subfile{sections/generative-and-discriminative}
 
-\section{Conditional Random Fields (CRFs)}
+\section{Linear-Chain Conditional Random Fields (CRFs)}
 \subfile{sections/conditional-random-fields}
 
-\section{Additional Applications}
-RNA sequencing etc.
+\section{Concluding Remarks}
+
+As put by \autocite{andrew-generative-discriminative-2001}. Discriminative models will tend to have greater success when N is large however thgere is a place for gene
 
 \printbibliography
 

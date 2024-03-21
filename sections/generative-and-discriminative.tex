@@ -1,0 +1,39 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+%Generative models describe the process by which $Y$ can probabilistically generate $X$.
+%Small training data then generative better,
+%But ill specified makes discrim better
+
+Unlike the na{\"i}ve Bayes model and HMM we have encountered thus far, the CRF does not factorise the joint probability $p(Y,X) = p(Y)p(X \mid Y)$, instead directly factorising the conditional probability $p(Y \mid X)$.
+It is this difference that is key in enabling the CRF to handle overlapping features and complex dependencies where the previous models cannot.
+This choice of factorisation describes whether a graphical model belongs to the class of either \textbf{generative} or \textbf{discriminative} models.
+In modelling the joint probability distribution $p(Y,X)$ both na{\"i}ve Bayes and HMMs implicitly construct the marginal distribution $p(X)$, requiring the dictation of a process by which $X$ is probabilistically generated. This characterising feature is the reason these models are considered `generative'.
+
+Generative models may begin to falter as we look to incorporate new, particularly overlapping, features such as a word's suffix in our prediction.
+These models require that we either assume complete feature independence or fully specify all inter-feature dependencies.
+Independence is unrealistic in such a context, consider as example that the value of a suffix is entirely dependent on the matching word, which we already incorporate as the feature $X_t$.
+Assuming independence regardless of this observation, as na{\"i}ve Bayes would, will result in probability estimates that are overconfident, since the overlapping information will disproportionately influence overall estimates.
+On the other hand, choosing to model the dependencies between the features will quickly become prohibitively difficult as the number of features scales. Moreover, even supposing the formation of sensible dependencies we are increasingly likely to encounter intractability when calculating the estimates.
+
+Discriminative models bypass making these problematic assumptions of $p(X)$ by modelling the conditional probability $p(Y \mid X)$ in place of $p(Y,X)$.
+Theoretically, these two approaches are interchangeable as any joint probability can be converted to a conditional probability (and vice versa) by application of Bayes' theorem.
+In practice however, our models are only approximations of the `true' distributions and so even two models that are considered to form a ``generative-discriminative pair'' \autocite{andrew-generative-discriminative-2001} will produce different estimates.
+
+An example of the relationship between discriminative and generative models is the pairing of na{\"i}ve Bayes and \textbf{logistic regression}.
+Both logistic regression and na{\"i}ve Bayes perform discrete classification on a set of unordered variables $X$. Unlike na{\"i}ve Bayes, logistic regression does not require the elements of $X$ to be independent and hence typically outperforms na{\"i}ve Bayes in many applications \autocite{log-reg-vs-nb}.
+The differences in these two modelling approaches are exclusively attributed to one being generative and one discriminative.
+In fact, any na{\"i}ve Bayes classifier can be converted to a logistic regression classifier with an identical decision boundary by training to maximise the conditional distribution rather than the joint one (the inverse is true for the logistic regression classifier).
+
+As an aside, the definition of the logistic regression classifier is given below as it will prove to be useful in defining the CRF.
+In order to concisely write the logistic regression classifier we define feature functions $f_{Y'}(Y,X)=\ind{Y'=Y}$ and $f_{Y',i}(Y,X)=\ind{Y'=Y}X_i$ which take the same inputs such that we are able to refer to a generic feature function $f_k$ which ranges over both $f_{Y'}$ and $f_{Y',i}$.
+In the same manner, $\theta_k$ will denote a generic parameter by which the trained model weights $f_k$. The logistic regression classifier is:
+\begin{equation*}
+     p(Y \mid X) = \frac{1}{Z(X)} \exp \left\{ \sum_{k=1}^K \theta_k f_k(Y,X) \right\} = \frac{1}{Z(X)} \prod_{k=1}^K \Psi_k,
+\end{equation*}
+where $Z(X)$ is a normalising function and $\Psi_k = \exp \{ \theta_k f_k(Y,X) \}$. Hence, the logistic regression model is also factorisable by a factor graph.
+
+We may now begin to wonder whether a discriminative pair to the HMM exists, with the hope that it will offer similar benefits in improvement as the logistic model does to na{\"i}ve Bayes.
+
+\end{document}

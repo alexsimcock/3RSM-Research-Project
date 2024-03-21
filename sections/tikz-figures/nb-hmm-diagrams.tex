@@ -2,51 +2,66 @@
 
 \begin{document}
 
-\begin{figure}[!tbp]
+\begin{figure}[ht]%$[!tbp]
     \centering
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.49\textwidth}
     \centering
     \begin{tikzpicture} [-> , >= stealth, shorten >= 2 pt, line width = 0.5pt, node distance = 1.75cm]
         \node [draw, circle] (y1) {$Y_1$};
         \node [draw, circle] (y2) [right of = y1] {$Y_2$};
-        \node [draw, circle] (y3) [right of = y2] {$Y_3$};
+        \node [draw, circle] (y3) [right of = y2] {$\cdots$};
+        \node [draw, circle] (yn) [right of = y3] {$Y_n$};
         
         \node [draw, circle] (x1) [below of = y1] {$X_1$};
         \node [draw, circle] (x2) [below of = y2] {$X_2$};
-        \node [draw, circle] (x3) [below of = y3] {$X_3$};
+        \node [draw, circle] (x3) [below of = y3] {$\cdots$};
+        \node [draw, circle] (xn) [below of = yn] {$X_n$};
         
         \path (y1) edge (x1);
         \path (y2) edge (x2);
         \path (y3) edge (x3);
-        
+        \path (yn) edge (xn);
+
+        \node (c1w1) at ($(y1)!0.45!(x1)$) {};
+        \node (c3w3) at ($(yn)!0.45!(xn)$) {};
+        \draw [-, dashed, line width =0.75 pt, shorten >=-1cm, shorten <=-1cm] (c1w1) -- (c3w3);
     \end{tikzpicture}
-    \caption{A Na{\"i}ve Bayes classifier applied to the part-of-speech tagging problem.}
+    \caption{A na{\"i}ve Bayes model.}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[b]{0.4\textwidth}
+  \begin{subfigure}[b]{0.5\textwidth}
     \centering
     \begin{tikzpicture} [-> , >= stealth, shorten >= 2 pt, line width = 0.5pt, node distance = 1.75cm]
         \node [draw, circle, fill=gray!30!white] (start) {$Y_0$};
         \node [draw, circle] (y1) [right of = start] {$Y_1$};
         \node [draw, circle] (y2) [right of = y1] {$Y_2$};
-        \node [draw, circle] (y3) [right of = y2] {$Y_3$};
+        \node [draw, circle] (y3) [right of = y2] {$\cdots$};
+        \node [draw, circle] (yn) [right of = y3] {$Y_n$};
         
         \path (start) edge (y1);
         \path (y1) edge (y2);
         \path (y2) edge (y3);
+        \path (y3) edge (yn);
         
         \node [draw, circle] (x1) [below of = y1] {$X_1$};
         \node [draw, circle] (x2) [below of = y2] {$X_2$};
-        \node [draw, circle] (x3) [below of = y3] {$X_3$};
+        \node [draw, circle] (x3) [below of = y3] {$\cdots$};
+        \node [draw, circle] (xn) [below of = yn] {$X_n$};
         
         \path (y1) edge (x1);
         \path (y2) edge (x2);
         \path (y3) edge (x3);
+        \path (yn) edge (xn);
+        
+        \node (c1w1) at ($(y1)!0.45!(x1)$) {};
+        \node (c3w3) at ($(yn)!0.45!(xn)$) {};
+        \draw [-, dashed, line width =0.75 pt, shorten >=-1cm, shorten <=-1cm] (c1w1) -- (c3w3); %-1, -1.75 or -2.75
         
     \end{tikzpicture}
-    \caption{A hidden Markov model applied to the part-of-speech tagging problem.}
+    \caption{A hidden Markov model.}
 \end{subfigure}
-\caption{My flowers.}
+\caption{Graphical structures of the na{\"i}ve Bayes and hidden Markov model.}
+\label{fig:nb-and-hmm-diag}
 \end{figure}
 
 \end{document}

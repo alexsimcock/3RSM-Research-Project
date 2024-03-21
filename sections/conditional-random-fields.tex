@@ -2,59 +2,31 @@
 
 \begin{document}
 
-The conditional random field (CRF) \autocite{lafferty-crf-2001} is an alternative graphical model for structural prediction that can be understood as a generalisation of the HMM, retaining similar graphical structure but adopting more flexible assumptions.
-The CRF falls into the class of \textbf{discriminative} models which, unlike the generative NB and HMM, make no assumptions of the process by which data is produced.
-The individual elements of discriminative models are generally less interpretable than their generative counterparts, but the models are more powerful overall due to their potential to leverage a greater amount of context.
+%It excels at labelling and parsing sequential data due to a learning approach that is able to infer relationships over many rounds of training.
+%It is applied often in modern machine learning systems for both natural language processing and computer vision.
 
-%------------
+The conditional random field (CRF) \autocite{lafferty-crf-2001} is an alternative graphical model that can be understood as a generalisation of the HMM, retaining a similar structure but adopting more flexible assumptions.
+This project will be concerned more precisely with a subset of the family of CRFs and the discriminative counterpart to the HMM: the linear-chain CRF.
 
-As in the HMM, the elements of $Y$ and $X$ are indexed by nodes of the graph, however arcs no longer indicate a process of transition or emission but can instead be seen as a two-way influence - it is for this reason that the arcs are now undirected.
-
-
-This is as the new model is discriminative.
-Importantly unlike the HMM probabilities are not required to be solely dependent on the current state $Y_t$ and can take influence from anywhere so the arcs may join any set of nodes.
-With these relaxations many new structures become possible, allowing for a much richer context window and thus more reliable results when estimating $p(Y \mid X)$.
-An example of potential CRF structure is given in figure \ref{fig:crf-diag}, demonstrating that connections are possible between all nodes in both the hidden and observed chain.
-As such, a feature of a given observation may influence the next label. Or otherwise the values of all observations could influence tags.
-Restrictions are placed on the number and kind of connections made by a CRF for the sake of computational/algorithmic complexity and avoiding issues of over-fitting.
-Most commonly this is divided into the \textbf{linear chain CRF} and \textbf{general CRF}.
-
-%\subfile{tikz-figures/old-crf-diagram}
+It can be understood graphically as an undirected HMM which permits any number of connections between the observed sequence $X$ and the nodes of $Y$.
+The undirected edges can be seen as no longer indicating processes of transition or emission but much like in the framework of a factor graph as observing local influence between the two nodes.
+CRFs are also able to incorporate additional features without concerns of inter-dependencies, thus we may also add new features to $X$ such as suffixes, prefixes and capitalisation which also connect to $Y$.
+With these relaxations many new structures become possible, allowing for a much richer context window and more reliable results when estimating $p(Y \mid X)$.
+An example of potential linear-chain CRF structure is given in figure \ref{fig:lc-crf-diag}.
 
 \subfile{tikz-figures/lc-crf-diagram}
 
-\subsubsection{Generative and Discriminative Models}
-The HMM which has been discussed thus far is a generative model...
-The CRF is discriminative not generative meaning that although $p(Y \mid X)$ is constructed $p(X)$ is NOT.
-The CRF has a number of favourable properties, namely enabling a richer set of features to be incorporated into predictions and also avoiding label bias that other alternatives to the HMM such as the Maximum Entropy Markov Model (MEMM) suffered from.
-It excels at labelling and parsing sequential data due to a learning approach that is able to infer relationships over many rounds of training.
-It is applied often in modern machine learning systems for both natural language processing and computer vision.
-The CRF is discriminative rather than generative.
-Unlike the HMM, the CRF takes a discriminative (rather than generative) approach. In doing so it does not directly model the bl,l,flfe,.
+%Restrictions are placed on the number and kind of connections made by a CRF for the sake of computational/algorithmic complexity and avoiding issues of over-fitting.
+%Most commonly this is divided into the \textbf{linear chain CRF} and \textbf{general CRF}.
+There exists also the general CRF, which also allows for relationships between non-neighbouring nodes of $Y$.
+The general CRF requires entirely new methodologies to compute and so has been considered outside of the scope of this project.
 
+\subsubsection{An Extension of the HMM}
+Viewing the lin chain as an extension of the HMM will allow us to simply define the algorithms by adapting the earlier ones...
 
+Notice the similarities to logistic regression, indeed this diagram points out the neat relation of all methods in this paper:
 
-\subsection{Algorithms for Inference}
-
-When working with linear chain CRFs we are able to easily adapt the suite of iterative algorithms that we previously developed for HMMs.
-As in that case the calculations still provide exact figures however the key variables $\alpha$, $\beta$, $\gamma$, $\delta$ lose the neat interpretations as themselves being probability distributions - as a result of the switch from a generative to discriminative approach.
-
-\subsubsection{Viterbi Algorithm}
-\subsection{Algorithms for Learning}
-\subsubsection{Baum-Welch Algorithm}
-\subsubsection{Pietra Algorithm}
-
-
-
-\subsubsection{Label Bias Problem}
-
-The CRF was initially motivated by the label bias problem.
-Occurs when the data is not representative of every possible outcome.
-Label states with only one outgoing transitions take little heed of their observation.
-Regardless of how often this observation has been seen all of the probability mass is passed along.
-If one overall word sequences is seen more often in training, this will now be chosen...
-
-\subsection{Linear Chain CRFs}
+\subfile{tikz-figures/model-relationships}
 
 \begin{definition}[Linear Chain CRF]
     Let $X$, $Y$ be random sequences/vectors variables.
@@ -77,41 +49,32 @@ $Z(X)$ is also exponentially LARGE, but calculable by forward-backward!
 
 Linear chain CRFs are considered more standard for industrialised use and impose the restriction that elements in the hidden state only interact with their neighbours.
 
-\begin{itemize}
-    \item Desirable features
-    \item Computing advantages of linear chain CRFs
-\end{itemize}
 
-\subsection{Generalised CRFs}
+%\subsection{Generalised CRFs}
 
-\begin{definition}[Generalised CRF]
-    Let $G$ be
-    \begin{equation*}
-        p (Y \mid X) = \frac{1}{Z(X)} \prod_{a=1}^A \Psi_a (Y_a, X_a)
-    \end{equation*}
+%\begin{definition}[Generalised CRF]
+%    Let $G$ be
+%    \begin{equation*}
+%        p (Y \mid X) = \frac{1}{Z(X)} \prod_{a=1}^A \Psi_a (Y_a, X_a)
+%    \end{equation*}
 
-\end{definition}
+%\end{definition}
 
-Differs from general factor graph as $Z$ is now a function of the input. Previously $Z$ may not have been computable but $Z(X)$ may be
+%Differs from general factor graph as $Z$ is now a function of the input. Previously $Z$ may not have been computable but $Z(X)$ may be
 
-\begin{definition}[Conditional Random Field]
-    Let $G = (V,E)$ be a graph such that $Y$ is indexed by the vertices of $G$: $Y = (Y_v)_{v \in V}$. $(X,Y)$ is a \textbf{conditional random field} if, when conditioned on $X$, the random variables $Y_i$ obey the Markov property with respect to $G$:
-    \begin{equation*}
-        p(Y_i \mid X, Y_j, i \neq j) = p(Y_i \mid X, Y_j, j \sim i)
-    \end{equation*}
-    Where $j \sim i$ means $j$ and $i$ are neighbours in $G$.
+%\begin{definition}[Conditional Random Field]
+%    Let $G = (V,E)$ be a graph such that $Y$ is indexed by the vertices of $G$: $Y = (Y_v)_{v \in V}$. $(X,Y)$ is a \textbf{conditional random field} if, when conditioned on $X$, the random variables $Y_i$ obey the Markov property with respect to $G$:
+%    \begin{equation*}
+ %       p(Y_i \mid X, Y_j, i \neq j) = p(Y_i \mid X, Y_j, j \sim i)
+  %  \end{equation*}
+   % Where $j \sim i$ means $j$ and $i$ are neighbours in $G$.
     %In other words, the likelihood of one tag transitioning to another is reliant exclusively on the present state and no wider memory. IS THIS TRUE? Surely that's a linear chain
-\end{definition}
+%\end{definition}
 
-The following aspects of CRFs are to be investigated and discussed in the final paper:
 
-\subsection{Feature Incorporation}
+\subsection{Inference from Linear-Chain CRFs}
 
-Alongside the new features we have already been granted the CRF is able to include new features like the suffixes and position in the sequence.
-
-\subsection{Inference from Linear Chain CRFs}
-
-Inference in linear chain CRFs is generally parallel to that in HMMS.
+Inference in linear chain CRFs is generally parallel to that in HMMs.
 Initially it is intractable and exponentially complex to calculate by brute force.
 Since we also will need to call this routine often in training, it may be that approximations could be used to even further speed up algorithms - although carry risk of unpredictable effects.
 We can, in the linear case, use the same algorithms as in the HMM (generalised models require more in-depth approaches).
@@ -153,22 +116,44 @@ Although the algorithm is the same our interpretation does change - since the mo
 
 Then
 \begin{equation*}
-    p (Y_t \mid X) = \frac{1}{Z(X)} \alpha_t(Y_t)\beta_t(Y_t)
+    p (Y_t=i \mid X) = \frac{1}{Z(X)} \alpha_t(i)\beta_t(i)
 \end{equation*}
+
+When working with linear chain CRFs we are able to easily adapt the suite of iterative algorithms that we previously developed for HMMs.
+As in that case the calculations still provide exact figures however the key variables $\alpha$, $\beta$, $\gamma$, $\delta$ lose the neat interpretations as themselves being probability distributions - as a result of the switch from a generative to discriminative approach.
+
 
 General CRFs will require other methods such as monte carlo (unbiased) or variational (which are biased but faster and borrow from the field of optimisation).
 Any graph inference techniques can be used.
 
 \subsection{Parameter Estimation}
 
-Provided and based off of \autocite{della-1997-crfparam} in the original thing.
+Log likelihood, we define a likelihood function like so
+and can compute it exactly! From earlier...
+after this it is wise to apply stochastic gradient methods...
+The original paper references \autocite{della-1997-crfparam}
 
-\subsubsection{Adapting the Baum-Welch algorithm}
+Minimise regularized negative log probability...
+Taken from a corpus $\mathcal{D} = \{X^{(s)}, Y^{(s)}\}_{s=1}^S$. Assume each $X$ is length $n$, for simplicity of notation - it does not contradict the derivation. 
+\begin{equation*}
+    L(\theta) = \sum_{s=1}^S \log p_\theta(Y^{(s)} \mid X^{(s)})
+\end{equation*}
+We want to maximise
+Substitute it into the CRF model (2.18) and also add regularization.
+With large sets of parameters - typically reaching into the hundreds of thousands , we use regularization which reduces the chances of overfitting by penalising weight vectors with a norm that is too large. A common choice is the euclidean norm with a regularization parameter $1/(2\sigma^2)$ \autocite{sutton-2012-crfintro}. Where $\sigma^2$ is a free parameter that can be chosen to determine how harshly to penalise %lso be viewed as performing maximum a posteriori (MAP) estimation of θ, if θ is assigned a Gaussian prior with mean 0 and covariance σ2I.
+\begin{equation*}
+    L(\theta) = \sum_{s=1}^S \sum_{t=1}^n \sum_{k=1}^K \theta_k f_k(Y_t^{(s)}, Y_{t-1}^{(s)}, X_t^{(s)}) - \sum_{s=1}^S \log Z(X^{(s)}) - \sum_{k=1}^K \frac{\theta_k^2}{2\sigma^2}
+\end{equation*}
+\begin{equation*}
+    \diffp{L}{{\theta_k}} = \sum_{s=1}^S  \sum_{t=1}^n f_k(Y_t^{(s)}, Y_{t-1}^{(s)}, X_t^{(s)}) - \sum_{s=1}^S \sum_{t=1}^T \sum_{y,y'} f_k(y,y',X_t^{(s)})p(y,y'\mid X^{(s)}) - \frac{\theta_k}{\sigma^2} 
+\end{equation*}
 
-%Rates of convergence \& symbiosis with other machine learning techniques
-%\section{Model Extensions}
-%\subsection{Unsupervised Parameter Learning / Baum-Welch Algorithm}
-%Can be used to train model parameters if there is no labelled data!!!!
+%\subsubsection{Label Bias Problem}
+%The CRF was initially motivated by the label bias problem.
+%Occurs when the data is not representative of every possible outcome.
+%Label states with only one outgoing transitions take little heed of their observation.
+%Regardless of how often this observation has been seen all of the probability mass is passed along.
+%If one overall word sequences is seen more often in training, this will now be chosen...
 
 \end{document}
 
