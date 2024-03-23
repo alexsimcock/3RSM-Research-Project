@@ -2,43 +2,43 @@
 
 \begin{document}
 
-Natural language processing is increasingly ubiquitous in the modern world, encompassing technologies from spam-email filters to large language models and much more.
+Natural language processing is approaching ubiquity in the modern world, encompassing technologies from spam-email filters to large language models and much more.
 Unordered `bag-of-words' approaches yield effective results despite their simplicity, but can be easily misled and fail to capture finely-grained detail.
-By utilising the sequential character of spoken word and text we are able to incorporate new, advantageous features crucial for both natural language understanding and generation.
+By utilising the sequential character of spoken word and text it is possible to incorporate new, advantageous features crucial for both natural language understanding and generation.
 
 Broadly speaking, any approach to natural language processing can be categorised as utilising formalised language theory or probabilistic methods (or both).
 Models of the former kind parse and generate language according to pre-defined rule-sets. Creating such rule-sets requires extensive domain expertise in linguistics and produces inherently rigid models which may struggle to adapt to the fluid development of natural language.
-In contrast, probabilistic models learn their own rule-sets by employing extensive reference data and are consequently as flexible as their inputs are broad. The improved accessibility of quality reference corpora in the internet-age has accelerated the development of such models, establishing them as the modern standard for natural language processing tasks.
+In contrast, probabilistic models learn their own rule-sets by employing extensive reference data and are consequently as flexible as their inputs are broad. The improved accessibility of quality reference corpora\footnote{The Penn Treebank is a notable industry-standard example of an annotated corpus. Generally speaking, a corpus is simply a very large dataset of text documents.} in the internet-age has accelerated the development of such models, establishing them as the modern standard for natural language processing tasks.
 
-Within this project the mathematical foundations of two key probabilistic sequence-labelling models, the \textbf{hidden Markov model} and \textbf{linear-chain conditional random field}, will be explored.
+This work analyses the mathematical foundations of two key probabilistic sequence-labelling models, the \textbf{hidden Markov model} and \textbf{linear-chain conditional random field}.
 The similarities, advantages and key characteristics of both approaches will be highlighted by an illustrative case-study from the field of natural language processing: part-of-speech tagging.
 
 \subsection{Preliminary: Part-of-Speech (POS) Tagging}
 
-The term `part-of-speech' refers to the syntactic category of a word, for example noun, verb or adjective (denoted \noun,  \verbsym\ and \adj\ in this report).\footnote{These tags would be considered `coarse-grained' in a typical annotated corpus, but befit the examples in this report. The tagset of the BNC \autocite{bnc-corpus} can be seen for an example of industry-grade POS tags.}
-
+ The term `part-of-speech' (POS) refers to the syntactic category of a word, for example noun, verb or adjective.\footnote{These tags would be considered `coarse-grained' in a typical annotated corpus, but befit the examples in this report. The tagset of the BNC \autocite{bnc-corpus} can be seen for an example of industry-grade POS tags.}
+ The algorithmic categorisation of words is made difficult by the ambiguities of regular language. The challenge of POS tagging is thus:
 \begin{quote}
-    Given a sequence of words, tag each word occurrence with the correct syntactic category. Consider the following example \autocite{eisenstein-nlp-2019}, should the grammatically-ambiguous words `can' and `fish' in the sequence `they can fish' be tagged \noun\ or \verbsym ? What about in the sequence `can of fish'?\footnote{The correct tags for the given examples would be \verbsym \verbsym\ and \noun \noun\ respectively.}
+    Given a sequence of words, tag each word occurrence with the correct syntactic category. Consider the following example \autocite{eisenstein-nlp-2019}, should the grammatically-ambiguous words `can' and `fish' in the sequence `they can fish' be tagged \textit{noun} or \textit{verb}? What about in the sequence `can of fish'?\footnote{The correct tags for the given examples would be (\textit{verb}, \textit{verb}) and (\textit{noun}, \textit{noun}) respectively.}
 \end{quote}
 
 \subsubsection{Motivation}
-Part-of-speech (POS) tagging is a key preliminary step in many natural language processing pipelines and assists word-sense disambiguation and word-sequence parsing algorithms alike \autocite{allen-nlu-1995}.
+POS tagging is a key preliminary step in many natural language processing pipelines and assists word-sense disambiguation and word-sequence parsing algorithms alike \autocite{allen-nlu-1995}.
 In providing both lexical and syntactic clarification, POS tagging can be of great benefit to many modern applications that are required to derive semantic meaning from natural language (such as search engines, conversational agents and machine translation).
 For these reasons (in addition to ease of interpretation) POS tagging will serve as the core pretext for sequence labelling within this report.
 
 \subsubsection{POS Tagging as Classification} \label{sec:pos-classification}
 
-In order to compose a rigorous approach to tagging any given sequence of words we introduce sequential random variables $X$ and $Y$ which enable a reframing of POS tagging which is fit for mathematical manipulation.
+In order to compose a rigorous approach to tagging any given sequence of words, we introduce sequential random variables $\boldX$ and $\boldY$ which enable a reframing of POS tagging which is fit for mathematical manipulation.
 \begin{quote}
-Let $X = (X_1,X_2,\ldots,X_T)$ and $Y = (Y_1,Y_2,\ldots,Y_T)$ be random variables such that $X$ varies over all (word) sequences to be labelled and $Y$ over all label sequences.
-All elements of $Y$ are selected from a finite alphabet $\mathcal{Y}$ (the set of all POS tags).
+Let $\boldX = (x_1,x_2,\ldots,x_T)$ and $\boldY = (y_1,y_2,\ldots,y_T)$ be random variables such that $\boldX$ varies over all (word) sequences to be labelled and $\boldY$ over all label sequences.
+All elements of $\boldY$ are selected from a finite alphabet $\mathcal{Y}$ (the set of all POS tags).
 The POS tagging problem can then be stated:
-`\textbf{given $X$, predict the correctly matched tag sequence $Y$}'.\footnote{The framework presented here, and as such all mathematics in this project, can be applied 
-to any problem that involves the labelling of sequential data by reconsidering the spaces which $X$, $Y$ and $\mathcal{Y}$ vary over. Possible examples include gene prediction and speech recognition.}
+`\textbf{given $\boldX$, predict the correctly matched tag sequence $\boldY$}'.\footnote{The framework presented here, and as such all mathematics in this project, can be applied 
+to any problem that involves the labelling of sequential data by reconsidering the spaces which $\boldX$, $\boldY$ and $\mathcal{Y}$ vary over. Possible examples include gene prediction and speech recognition.}
 \end{quote}
-Approached in this manner, the task of POS tagging is an example of statistical \textbf{classification} in which we aim to assign a discrete class label $Y$ to an observed set of features $(X_1,X_2,\ldots,X_T)$.
-In this project we will derive label predictions (denoted $\yhat$) by applying \textbf{maximum likelihood estimation (MLE)} which means assuming that the optimal prediction will maximise an appropriate likelihood function.
-A sensible choice of function to begin our search with is the posterior probability distribution $p(Y \mid X)$.
-We are now tasked with devising models that will facilitate the computation of this distribution and hence provide our desired classifier.
+Approached in this manner, POS tagging is an example of \textbf{statistical classification}, in which we wish to predict the unknown discrete class label $\boldY$ underlying the observed set of features $(x_1,x_2,\ldots,x_T)$.
+In this project we will derive tag-sequence predictions (denoted $\yhat$) by applying \textbf{maximum likelihood estimation (MLE)}, whereby we assume that the optimal prediction will maximise an appropriate likelihood function.
+A sensible choice of function to begin with is the posterior probability distribution $p(\boldY \mid \boldX)$.
+We are now tasked with devising models that will facilitate the computation of this distribution and hence provide the desired POS classifier.
 
 \end{document}

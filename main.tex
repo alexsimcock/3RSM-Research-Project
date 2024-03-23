@@ -38,9 +38,12 @@
 % Custom operators:
 \newtheorem{definition}{Definition}[section]\newtheorem{assumption}{Assumption}
 
+\newcommand{\hateq}{\widehat{=}}
 \newcommand{\ind}[1]{\mathbf{1}_{\{#1\}}}
-\newcommand{\yhat}{\hat{Y}}
+\newcommand{\yhat}{\hat{\mathbf{y}}}
 \newcommand{\ptheta}{p_\theta}
+\newcommand{\boldX}{\mathbf{x}}
+\newcommand{\boldY}{\mathbf{y}}
 
 \newcommand{\noun}{\textbf{N}}
 \newcommand{\verbsym}{\textbf{V}}
@@ -50,9 +53,8 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator{\countfunc}{count}
 
-%\title{Sequential Labelling Techniques for Natural Language}
-%\title{Sequence Labelling with Graphical Models with an Application in Natural Language Processing}
-\title{Graphical Sequence Labelling for Natural Language}
+%https://www.researchgate.net/publication/215990477_An_Empirical_Comparison_of_Supervised_Learning_Algorithms/citation/download
+\title{Graphical Models for Part-of-Speech Tagging} %Graphical Models for Sequence Labelling 
 \author{Alexander Simcock (2146154)}
 \date{}
 
@@ -99,10 +101,6 @@
 
 \section{Linear-Chain Conditional Random Fields (CRFs)}
 \subfile{sections/conditional-random-fields}
-
-\section{Concluding Remarks}
-
-As put by \autocite{andrew-generative-discriminative-2001}. Discriminative models will tend to have greater success when N is large however thgere is a place for gene
 
 \printbibliography
 

@@ -5,160 +5,155 @@
 %It excels at labelling and parsing sequential data due to a learning approach that is able to infer relationships over many rounds of training.
 %It is applied often in modern machine learning systems for both natural language processing and computer vision.
 
-The conditional random field (CRF) \autocite{lafferty-crf-2001} is an alternative graphical model that can be understood as a generalisation of the HMM, retaining a similar structure but adopting more flexible assumptions.
-This project will be concerned more precisely with a subset of the family of CRFs and the discriminative counterpart to the HMM: the linear-chain CRF.
+The conditional random field (CRF) \autocite{lafferty-crf-2001} is another graphical model that can be understood as a generalisation of the HMM, retaining a similar structure but adopting more flexible assumptions.
+This project will be concerned with only a subset of the family of CRFs, which form a generative-discriminative pair with the HMM: the linear-chain CRF.
 
-It can be understood graphically as an undirected HMM which permits any number of connections between the observed sequence $X$ and the nodes of $Y$.
-The undirected edges can be seen as no longer indicating processes of transition or emission but much like in the framework of a factor graph as observing local influence between the two nodes.
-CRFs are also able to incorporate additional features without concerns of inter-dependencies, thus we may also add new features to $X$ such as suffixes, prefixes and capitalisation which also connect to $Y$.
-With these relaxations many new structures become possible, allowing for a much richer context window and more reliable results when estimating $p(Y \mid X)$.
+The linear-chain CRF can be understood graphically as an undirected HMM which permits any number of connections between the observed sequence $\boldX$ and the nodes of $\boldY$.
+The edges of a CRF no longer indicate processes of transition or emission, but instead a general dependency between the two nodes.
+This relaxations permits many new structures, allowing for a much richer context window and more reliable results when estimating $p(\boldY \mid \boldX)$.
+Of particular interest is the resulting ability to incorporate new features without giving rise to concerns of inter-dependencies.
+We could include any number of features to create a CRF that is able to leverage an immense amount of contextual information, such features could include suffixes, capitalisation, domain-specific lexicon membership and more. Most crucially when compared to the HMM, we are able to utilise information that extends outside of the current index, for example by defining a feature which checks whether the word is preceded by `the'.
 An example of potential linear-chain CRF structure is given in figure \ref{fig:lc-crf-diag}.
-
 \subfile{tikz-figures/lc-crf-diagram}
+General CRFs are even less restrictive, allowing for connections to be drawn between non-neighbouring nodes of $\boldY$. However, this addition gives rise to considerably increased complexity even for singular inferences, requiring completely new graphical inference methods.
+The general CRF demands an immense amount of data and computing power to implement and so the linear-chain CRF can be seen as a more economical approach.
 
-%Restrictions are placed on the number and kind of connections made by a CRF for the sake of computational/algorithmic complexity and avoiding issues of over-fitting.
-%Most commonly this is divided into the \textbf{linear chain CRF} and \textbf{general CRF}.
-There exists also the general CRF, which also allows for relationships between non-neighbouring nodes of $Y$.
-The general CRF requires entirely new methodologies to compute and so has been considered outside of the scope of this project.
-
-\subsubsection{An Extension of the HMM}
-Viewing the lin chain as an extension of the HMM will allow us to simply define the algorithms by adapting the earlier ones...
-
-Notice the similarities to logistic regression, indeed this diagram points out the neat relation of all methods in this paper:
-
-\subfile{tikz-figures/model-relationships}
-
+%TODO: parameters?
+To define the linear-chain CRF we first note that the linear-chain CRF itself can be thought of as a HMM with particular feature functions.
+Hence, it is sensible to find a generalised but equivalent formulation of the HMM joint probability \cref{eq:hmm-model}, which we can then commute to find the conditional probability.
+This process is parallel to the transformation of the na{\"i}ve Bayes to logistic regression.
+An appropriate form for such a generalisation is
+\begin{equation} \label{eq:hmm-advanced-form}
+    p(\boldY,\boldX) = \frac{1}{Z} \prod_{t=1}^T \exp \left\{ \sum_{i,j \in \mathcal{Y}} \theta_{i,j} \ind{y_t=i}\ind{y_{t-1}=j} + \sum_{i \in \mathcal{Y}} \sum_{k \in \mathcal{X}} \mu_{k,i} \ind{y_t = i}\ind{x_t=k} \right\},
+\end{equation}
+where $\theta = \{\theta_{i,j},\mu_{i,k}\}$ are the parameters of the HMM and $Z$ is a normalisation constant such that the distribution sums to one.
+Thankfully this formulation permits more flexibility without adding any new classes of model \autocite{sutton-2012-crfintro}.
+The HMM of the kind we have encountered can be summarised in this format by taking
+\begin{align*}
+    \theta_{i,j} &= \log{p(y_{t-1}=i \mid y_t=j)} = \log{a_{i,j}}, \\
+    \mu_{i,k} &= \log{p(x_t=k \mid y_t=i)} = \log{b_i(k)}, \\
+    Z&=1
+\end{align*}
+and declaring feature functions $f_{i,j}(y,y',x) = \ind{y=i}\ind{y'=j}$ and $f_{i,k}(y,y',x)=\ind{y= i}\ind{x=k}$.
+Hence, we can simplify \cref{eq:hmm-advanced-form} to
+\begin{equation*}
+    p(\boldY,\boldX) = \frac{1}{Z} \prod_{t=1}^T \exp \left\{ \sum_{k=1}^K \theta_k f_k(y_t, y_{t-1}, x_t) \right\}.
+\end{equation*}
+We then apply this formula to derive the distribution of the linear-chain CRF:
+\begin{equation*}
+    p(\boldY \mid \boldX) = \frac{p(\boldY,\boldX)}{\sum_{\boldY'} p(\boldY',\boldX)} = \frac{\prod_{t=1}^T \exp \left\{ \sum_{k=1}^K \theta_k f_k(y_t, y_{t-1}, x_t) \right\}}{\sum_{\boldY'} \prod_{t=1}^T  \exp \left\{ \sum_{k=1}^K \theta_k f_k(y'_t, y'_{t-1}, x_t) \right\}}.
+\end{equation*}
+Since this model has arisen from a HMM, it is currently only configured to use the same feature set as the HMM.
+This is easily resolved by simply allowing the feature functions be more general.
+To do so neatly, we define $\boldX_t$ which is the vector of all features in $\boldX$ that the linear-chain CRF accesses across all of its feature functions at any one index $t$.
 \begin{definition}[Linear Chain CRF]
-    Let $X$, $Y$ be random sequences/vectors variables.
-    $\theta_k$ be parameter vector and $\mathcal{F} = \{ f_k (y,y',x) \}_{k=1}^K$ be a set of feature functions.
-    The conditional random field is then a probability distribution.
+    Let $\boldX$, $\boldY$ be random sequences/vectors variables.
+    $\theta_k$ be parameter vector and $\mathcal{F} = \{ f_k (y,y',\boldX_t) \}_{k=1}^K$ be a set of feature functions.
+    The linear-chain conditional random field is then a probability distribution.
+    \begin{equation} \label{eq:lc-crf-def}
+        p(\boldY \mid \boldX) = \frac{1}{Z(\boldX)} \prod_{t=1}^{T} \exp \left\{ \sum_{k=1}^K \theta_k f_k (y_t, y_{t-1}, \boldX_t) \right\}.
+    \end{equation}
+    Where $Z(\boldX)$ is a normalising function over all values of $\boldY$:
     \begin{equation*}
-        p(Y \mid X) = \frac{1}{Z(X)} \prod_{t=1}^{n} \exp \left\{ \sum_{k=1}^K \theta_k f_k (Y_t, Y_{t-1}, X) \right\}
-    \end{equation*}
-    Where $Z(X)$ is a normalising function over all values of $Y$:
-    \begin{equation*}
-        Z(X) = \sum_{\forall Y} \prod_{t=1}^{n} \exp \left\{ \sum_{k=1}^K \theta_k f_k (Y_t, Y_{t-1}, X) \right\}
+        Z(\boldX) = \sum_{\boldY} \prod_{t=1}^{T} \exp \left\{ \sum_{k=1}^K \theta_k f_k (y_t, y_{t-1}, \boldX_t) \right\}.
     \end{equation*}
 \end{definition}
+Note, once more, that the linear-chain CRF can also be shown to be a factor graph by re-writing \cref{eq:lc-crf-def} with the choice of $\Psi_t$
+\begin{equation} \label{eq:crf-factor-graph}
+    \Psi_t(y_t, y_{t-1}, x_t) = \exp \left\{ \sum_{k=1}^K \theta_k f_k (y_t, y_{t-1}, \boldX_t) \right\}.
+\end{equation}
+One may note the similarities of this distribution to the logistic regression model \cref{eq:log-reg}. Indeed, as the HMM was a sequential extension of the na{\"i}ve Bayes, the linear-chain CRF is a sequential logistic regression model.
+The interrelatedness of the methods in this project is summarised in \cref{fig:nb-and-hmm-diag}.
+\subfile{tikz-figures/model-relationships}
 
-Can be thought of as a HMM where the transition probability is not fixed as a scaled $p (Y_t = i \mid Y_{t-1} = j)$. We can incorporate features for example from the current observation, orrr alll observations, here actually although we have written $X$, computationally we would consider only those elements of $X$ pertinent to timestep $t$.
-i.e. the assumptions are much less restrictive and relationship between $X$ and $Y$ is two-way.
+\subsection{Inference}
 
-As the number of features increases, computing the probabilties becomes increasingly complex.
-$Z(X)$ is also exponentially LARGE, but calculable by forward-backward!
-
-Linear chain CRFs are considered more standard for industrialised use and impose the restriction that elements in the hidden state only interact with their neighbours.
-
-
-%\subsection{Generalised CRFs}
-
-%\begin{definition}[Generalised CRF]
-%    Let $G$ be
-%    \begin{equation*}
-%        p (Y \mid X) = \frac{1}{Z(X)} \prod_{a=1}^A \Psi_a (Y_a, X_a)
-%    \end{equation*}
-
-%\end{definition}
-
-%Differs from general factor graph as $Z$ is now a function of the input. Previously $Z$ may not have been computable but $Z(X)$ may be
-
-%\begin{definition}[Conditional Random Field]
-%    Let $G = (V,E)$ be a graph such that $Y$ is indexed by the vertices of $G$: $Y = (Y_v)_{v \in V}$. $(X,Y)$ is a \textbf{conditional random field} if, when conditioned on $X$, the random variables $Y_i$ obey the Markov property with respect to $G$:
-%    \begin{equation*}
- %       p(Y_i \mid X, Y_j, i \neq j) = p(Y_i \mid X, Y_j, j \sim i)
-  %  \end{equation*}
-   % Where $j \sim i$ means $j$ and $i$ are neighbours in $G$.
-    %In other words, the likelihood of one tag transitioning to another is reliant exclusively on the present state and no wider memory. IS THIS TRUE? Surely that's a linear chain
-%\end{definition}
-
-
-\subsection{Inference from Linear-Chain CRFs}
-
-Inference in linear chain CRFs is generally parallel to that in HMMs.
-Initially it is intractable and exponentially complex to calculate by brute force.
-Since we also will need to call this routine often in training, it may be that approximations could be used to even further speed up algorithms - although carry risk of unpredictable effects.
-We can, in the linear case, use the same algorithms as in the HMM (generalised models require more in-depth approaches).
-
-\subsubsection{Re-denoting the HMM Inference Algorithms}
-First we define the earlier algorithms with new notation.
-The HMM:
+Given the clear similarities between the two models, it should be unsurprising that the suite of iterative algorithms for HMMs derived in \cref{sec:fb-algo,sec:viterbi-algo} can be easily adapted for use on linear-chain CRFs.
+Indeed the leaps in computational efficiency these algorithms make are even more crucial given the much larger set of features we would aim to incorporate in a CRF model.
+First, we re-define the algorithms for the HMM, but this time using the factor graph notation introduced by \cref{eq:hmm-crf-factor-form} that will more easily transfer to linear-chain CRFs.
+\begin{align*}
+    \alpha_t(j) &\coloneqq p(\boldX_{1:t},Y_t=j) = \sum_{\boldY_{1:t-1}} \Psi(j,y_{t-1},x_t) \prod_{t'=1}^{t-1} \Psi_{t'}(y_{t'},y_{t'-1},x_{t'}), \\
+    \beta_t(j) &\coloneqq p(\boldX_{t+1:T},y_t=j) = \sum_{\boldY_{t+1:T}} \prod_{t'=t+1}^{T} \Psi_{t'}(y_{t'},y_{t'-1},x_{t'}), \\
+    \delta_t(j) &\coloneqq  \max_{\boldY_{1:t-1}} \Psi_t(j,y_{t-1},x_t) \prod_{t'=1}^{t-1} \Psi_{t'}(y_{t'},y_{t'-1},x_{t'}).
+\end{align*}
+Next, the recursive steps are also written in terms of $\Psi_t$,
 \begin{equation*}
-    p (Y,X) = \prod_t \Psi_t (Y_t, Y_{t-1}, X_t)
+    \begin{aligned}
+        \text{Base Case:} & \quad \alpha_1(j) = \Psi_1(j,y_0,x_1) \\
+        \text{Inductive Step:} & \quad \alpha_t(j) = \sum_{i \in \mathcal{Y}} \Psi_t(j,i,x_t) \alpha_{t-1}(i) \\
+        \text{Base Case:} & \quad \beta_T(i) = 1 \\
+        \text{Inductive Step:} & \quad \beta_{t-1}(i) = \sum_{j \in \mathcal{Y}} \Psi_{t} (j,i,x_{t})\beta_{t}(j) \\
+        \text{Base Case:} & \quad \delta_1(j) = \max_i \Psi_1(j,y_0,x_1) \\
+        \text{Inductive Step:} & \quad \delta{t}(j) = \max_i \Psi_t(j,i,x_t) \delta_{t-1}(i)
+    \end{aligned} \qquad 
+        \begin{array}{lr}
+            i,j \in \mathcal{Y} \\
+            2 \leq t \leq T
+        \end{array}
 \end{equation*}
-Where,
+Finally, we reformulate $\xi$ which we will need for parameter estimation:
+\begin{align*}
+    \begin{aligned}
+    \xi_t(i,j) \coloneqq & \ptheta(y_t = i, y_{t+1} = j \mid \boldX) \\
+    &= \frac{\alpha_{t}(i)\Psi_t(i,j,x_{t+1})\beta_{t+1}(j)}{\ptheta(\boldX)}
+    \end{aligned} \qquad \begin{array}{lr}
+            i,j \in \mathcal{Y} \\
+            1 \leq t \leq T-1
+        \end{array}
+\end{align*}
+%pg53
+This reformulation has not altered the values of the helper functions in any way and so these new identities can be applied in the forward-backward and Viterbi algorithms in exactly the same manner as before.
+Crucially, the factor graph representation presented here allows for these two algorithms to be easily extended to linear-chain CRFs by substituting $\Psi_t$ with its linear-chain CRF form (given in \cref{eq:crf-factor-graph}).
+We can therefore perform the forward-backward and Viterbi algorithms on linear-chain CRFs, with the sole side effect that the helper functions are no longer neatly interpretable as probability distributions.
+Instead, the forward-backward algorithm will now return the normalising function $Z(\boldX)$ rather than $\ptheta(\boldX)$,
 \begin{equation*}
-    \Psi_t(j,i,x) \coloneqq p (Y_t=j \mid Y_{t-1}=i) p (X_t=x \mid Y_t=j)
+    Z(\boldX) = \sum_{i \in \mathcal{Y}}\alpha_T(i) = \beta_0(y_0).
 \end{equation*}
-
-The forward algorithm caches inner sums... there are $\mathcal{Y}$ such variables
-\begin{equation*}
-    \alpha_t(j) \coloneqq p (X_{1:t},Y_t=j) = \sum_{\text{all } Y_{1:t-1}} \Psi(j,Y_{t-1},X_t) \prod_{t'=1}^{t-1} \Psi_{t'}(Y_{t'},Y_{t'-1},X_{t'})
-\end{equation*}
-Which can be calculated by recursion
-\begin{gather*}
-    \alpha_1(j) = \Psi_1(j,Y_0,X_1) \\
-    \alpha_t(j) = \sum_{i \in \mathcal{Y}} \Psi_t(j,i,X_t) \alpha_{t-1}(i)
-\end{gather*}
-Backwards is reverse...
-
-Again allowing for calculation of $p (Y_{t-1}, Y_t \mid X)$.
-For viterbi we swap out summation with maximisation.
-
-The FB algo is now identical! Simply with a new definition of $\Psi_t$.
-
-% WE NEED NOTATION FOR MORE THAN JUST XT (ALL RELEVANT X)
-In the CRF
-\begin{equation*}
-    \Psi_t (Y_t,Y_{t-1},X_t) = \exp \left\{ \sum_k \theta_k f_k(Y_t,Y_{t-1},X_t)\right\}
-\end{equation*}
-
-Although the algorithm is the same our interpretation does change - since the model is discriminative and not generative. The $\alpha$ and $\beta$ variables do not directly mean anything.
-
-Then
-\begin{equation*}
-    p (Y_t=i \mid X) = \frac{1}{Z(X)} \alpha_t(i)\beta_t(i)
-\end{equation*}
-
-When working with linear chain CRFs we are able to easily adapt the suite of iterative algorithms that we previously developed for HMMs.
-As in that case the calculations still provide exact figures however the key variables $\alpha$, $\beta$, $\gamma$, $\delta$ lose the neat interpretations as themselves being probability distributions - as a result of the switch from a generative to discriminative approach.
-
-
-General CRFs will require other methods such as monte carlo (unbiased) or variational (which are biased but faster and borrow from the field of optimisation).
-Any graph inference techniques can be used.
+Thankfully, this does not alter the computation of the marginal distributions:
+\begin{align*}
+    \gamma_t(i) &= \ptheta(y_t \mid \boldX) = \frac{\alpha_t(y_t)\beta_t(y_t)}{Z(\boldX)}, \\
+    \xi_t(i,j) &= \ptheta(y_t=i,y_{t+1}=j\mid \boldX) = \frac{\alpha_{t}(i)\Psi_t(i,j,x_{t+1})\beta_{t+1}(j)}{Z(\boldX)}.
+\end{align*}
 
 \subsection{Parameter Estimation}
 
-Log likelihood, we define a likelihood function like so
-and can compute it exactly! From earlier...
-after this it is wise to apply stochastic gradient methods...
-The original paper references \autocite{della-1997-crfparam}
+The Baum-Welch algorithm is no longer appropriate when training the linear-chain CRF, indeed we have many more parameters and calculating the expected values for each would be highly cumbersome, if not completely infeasible.
+Thankfully, there are several other approaches from the field of nonlinear optimisation which are well-suited to this task.
+In fact, the exponential form of the linear-chain CRF has highly desirable properties for optimisation.
+We begin with the typical log-likelihood function $L(\theta)$ which we wish to maximise,
+\begin{equation*}
+    L(\theta) = \sum_{n=1}^N \log p_\theta(\boldY^{(i)} \mid \boldX^{(i)}).
+\end{equation*}
+We then substitute this function into the linear-chain CRF model \cref{eq:lc-crf-def}:
+\begin{equation} \label{eq:lc-crf-log-likeli}
+        L(\theta) = \sum_{i=1}^N \sum_{t=1}^T \sum_{k=1}^K \theta_k f_k(y_t^{(i)}, y_{t-1}^{(i)}, x_t^{(i)}) - \sum_{i=1}^N \log Z(\boldX^{(i)}).
+\end{equation}
+It is then sensible to introduce a regularisation term $\frac{\theta_k^2}{2\sigma^2}$:
+\begin{equation*}
+        L(\theta) = \sum_{i=1}^N \sum_{t=1}^T \sum_{k=1}^K \theta_k f_k(y_t^{(i)}, y_{t-1}^{(i)}, x_t^{(i)}) - \sum_{i=1}^N \log Z(\boldX^{(i)}) - \sum_{k=1}^K \frac{\theta_k^2}{2\sigma^2}.
+\end{equation*}
+Much like the earlier example of additive smoothing (\cref{eq:additive-smoothing}) the regulariser will reduce excessively high variance, here by penalising weight vectors with norms that are too large. In this expression $\sigma^2$ is a free parameter that can be chosen to determine the level of penalisation.
+Regularisation is particularly important in the context of CRFs as it is not abnormal to encounter models with sets of parameters in the hundreds of thousands \autocite{sutton-2012-crfintro}.
+Both the log-likelihood function \cref{eq:lc-crf-log-likeli} and the regularisation term we have chosen to add to it (the euclidean norm) are strictly concave, since both are products of non-negative numbers.\footnote{The log-likelihood function is of the form $\log \sum_i \exp{x_i}$ which is universally convex.}
+Since both our initial likelihood function and regulariser are strictly concave, any local solution we are able to converge to will provide globally optimal parameters.
+There are several approaches to finding this point of convergence although all will require the derivation of the partial derivative:
+\begin{equation*}
+    \diffp{L}{{\theta_k}} = \sum_{i=1}^N  \sum_{t=1}^T f_k(y_t^{(i)}, y_{t-1}^{(i)}, x_t^{(i)}) - \sum_{i=1}^N \sum_{t=1}^T \sum_{y,y'} f_k(y,y',x_t^{(i)})p(y,y'\mid \boldX^{(i)}) - \frac{\theta_k}{\sigma^2}. 
+\end{equation*}
+Gradient ascent is the simplest approach to implement, but is typically considered to converge too slowly. Newton methods are quicker but require the inverting incredibly large matrices as a result of our large parameter space, which is too complex.
+Instead, quasi-Newton approaches such as BFGS are most widely implemented and can favourably be used without need for particular specification.
 
-Minimise regularized negative log probability...
-Taken from a corpus $\mathcal{D} = \{X^{(s)}, Y^{(s)}\}_{s=1}^S$. Assume each $X$ is length $n$, for simplicity of notation - it does not contradict the derivation. 
-\begin{equation*}
-    L(\theta) = \sum_{s=1}^S \log p_\theta(Y^{(s)} \mid X^{(s)})
-\end{equation*}
-We want to maximise
-Substitute it into the CRF model (2.18) and also add regularization.
-With large sets of parameters - typically reaching into the hundreds of thousands , we use regularization which reduces the chances of overfitting by penalising weight vectors with a norm that is too large. A common choice is the euclidean norm with a regularization parameter $1/(2\sigma^2)$ \autocite{sutton-2012-crfintro}. Where $\sigma^2$ is a free parameter that can be chosen to determine how harshly to penalise %lso be viewed as performing maximum a posteriori (MAP) estimation of θ, if θ is assigned a Gaussian prior with mean 0 and covariance σ2I.
-\begin{equation*}
-    L(\theta) = \sum_{s=1}^S \sum_{t=1}^n \sum_{k=1}^K \theta_k f_k(Y_t^{(s)}, Y_{t-1}^{(s)}, X_t^{(s)}) - \sum_{s=1}^S \log Z(X^{(s)}) - \sum_{k=1}^K \frac{\theta_k^2}{2\sigma^2}
-\end{equation*}
-\begin{equation*}
-    \diffp{L}{{\theta_k}} = \sum_{s=1}^S  \sum_{t=1}^n f_k(Y_t^{(s)}, Y_{t-1}^{(s)}, X_t^{(s)}) - \sum_{s=1}^S \sum_{t=1}^T \sum_{y,y'} f_k(y,y',X_t^{(s)})p(y,y'\mid X^{(s)}) - \frac{\theta_k}{\sigma^2} 
-\end{equation*}
+\subsection{Limitations of Linear-Chain CRFs}
 
-%\subsubsection{Label Bias Problem}
-%The CRF was initially motivated by the label bias problem.
-%Occurs when the data is not representative of every possible outcome.
-%Label states with only one outgoing transitions take little heed of their observation.
-%Regardless of how often this observation has been seen all of the probability mass is passed along.
-%If one overall word sequences is seen more often in training, this will now be chosen...
+Despite the advantageous characteristics of linear-chain CRFs, it cannot be said that implementing such a model is a catch-all solution.
+There are several contexts where the generative approach offered by the HMM may indeed be preferable despite its limitations.
+Generative models are much less computationally demanding to implement and train and also tend to perform better on smaller datasets \autocite{andrew-generative-discriminative-2001}.
+Moreover, were the context for sequence labelling simple enough that a `true' generative model could be built, then its estimates would be exact. The same cannot be said for models trainined discriminatively.
+
+One especially powerful use-case of HMMs applies an adapted Baum-Welch algorithm to train parameters on unsupervised data, that is, data that is not already annotated with POS tags \autocite{kupiec-1992-hmm}.
+Analogous methodologies do not exist for discriminative learning, limiting the linear-chain CRFs ability to tag languages with less widely available corpora.
+
+Regardless, when the dataset is large and features are well chosen, CRFs will perform exceedingly well.
+Models that build upon the general CRF have been shown to achieve state-of-the-art results of up to 97.24\% accuracy (tested on the Penn Treebank WSJ corpus, a standard industry benchmark) \autocite{tout-pos2003}.
 
 \end{document}
-
-- **Conditional random fields (CRFs)** are a probabilistic framework for modeling structured outputs, such as sequences, trees, and graphs, given a set of input features.
-- **CRFs** combine the advantages of **discriminative classification** and **graphical modeling**, allowing for rich, overlapping features and compact representation of complex dependencies among output variables¹[1].
-- **CRFs** can be seen as a generalization of **logistic regression** and a discriminative analogue of **hidden Markov models (HMMs)**, which are generative models of structured data²[2]³[3].
-- **CRFs** can be trained by **maximum likelihood estimation** using gradient-based optimization methods, such as **L-BFGS** or **stochastic gradient descent**. The gradient computation requires **inference** in the model, which can be done exactly for some structures, such as linear chains, or approximately for others, such as general graphs, using methods such as **belief propagation** or **Markov chain Monte Carlo**.
-- **CRFs** have been successfully applied to many tasks in **natural language processing**, **computer vision**, and **bioinformatics**, often achieving state-of-the-art results⁴[4]. They can also be extended to include **latent variables**, **higher-order factors**, and **non-linear features**.
